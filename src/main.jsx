@@ -9,6 +9,7 @@ const oidcConfig = {
     authority: "https://auth.dinonerd.it/realms/ShitWithFriend",
     client_id: "swf-web",
     redirect_uri: window.location.origin,
+    post_logout_redirect_uri: window.location.origin,
     onSigninCallback: () => {
         window.history.replaceState({}, document.title, window.location.pathname);
     }

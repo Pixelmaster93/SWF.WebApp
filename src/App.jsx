@@ -112,12 +112,7 @@ function App() {
                     myGroups={myGroups}
                     onSelectGroup={(gid) => { setCurrentGroupId(gid); setView('app'); }}
                     onLogout={async () => {
-                        await auth.removeUser();
-                        setView('landing');
-                        // Clear all react-query caches to remove user profile and groups data
-                        // queryClient is not available here directly, but we can just let the state update handle it. 
-                        // However, to be safe, we can manually trigger a navigation if needed, 
-                        // but auth.isAuthenticated changing to false should trigger the useEffect.
+                        await auth.signoutRedirect();
                     }}
                 />
             </div>
@@ -173,8 +168,7 @@ function App() {
             {appView === 'settings' && (
                 <SettingsView
                     onLogout={async () => {
-                        await auth.removeUser();
-                        setView('landing');
+                        await auth.signoutRedirect();
                     }}
                 />
             )}

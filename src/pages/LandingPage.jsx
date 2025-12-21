@@ -8,7 +8,7 @@ const LandingPage = ({ onLogin }) => {
                     💩
                 </div>
 
-                <h1 className="text-4xl font-black text-amber-900 mb-2 tracking-tight">Shit w/ Friends</h1>
+                <h1 className="text-4xl font-black text-amber-900 mb-2 tracking-tight">Shit With Friends</h1>
                 <p className="text-amber-700/60 mb-8 font-medium text-lg">Il social network definitivo.</p>
 
                 <button
