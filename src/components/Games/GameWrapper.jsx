@@ -1,0 +1,64 @@
+import React, { useState } from 'react';
+import { RotateCcw, X } from 'lucide-react';
+import { GAMES_CONFIG } from '../../pages/GameSelection';
+
+const formatTime = (seconds) => {
+    if (!seconds && seconds !== 0) return '--:--';
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+};
+
+const formatScore = (gameId, value) => {
+    if (GAMES_CONFIG[gameId].unit === 'time') return formatTime(value);
+    return value;
+};
+
+const GameSummaryScreen = ({ gameId, score, onReplay, onExit, currentGroup }) => {
+    const config = GAMES_CONFIG[gameId];
+    // Fetch game leaderboard for current group? 
+    // For now, static or minimal.
+
+    return (
+        <div className="absolute inset-0 bg-white z-50 flex flex-col overflow-hidden">
+            <div className="bg-amber-600 text-white p-6 text-center shrink-0">
+                <h2 className="text-2xl font-bold mb-2">{config.name}</h2>
+                <p className="text-amber-200 text-sm uppercase font-bold">Partita Finita</p>
+                <div className="text-5xl font-black mt-4 font-mono drop-shadow-md">{formatScore(gameId, score)}</div>
+            </div>
+            <div className="p-4 flex gap-4 justify-center shrink-0 bg-gray-50 border-b border-gray-200">
+                <button onClick={onReplay} className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-transform"><RotateCcw size={20} /> Rigioca</button>
+                <button onClick={onExit} className="flex items-center gap-2 bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-bold active:scale-95 transition-transform"><X size={20} /> Esci</button>
+            </div>
+            <div className="flex-1 overflow-y-auto bg-gray-50 p-4">
+                {/* Leaderboard placeholder */}
+                <div className="text-center text-gray-400 mt-10">Classifica non disponibile (WIP)</div>
+            </div>
+        </div>
+    );
+};
+
+const GameWrapper = ({ onEnd, children, gameId, currentGroup }) => {
+    const [gameOverState, setGameOverState] = useState(null);
+
+    const handleGameEnd = (score) => {
+        setGameOverState({ score });
+        onEnd(score);
+    };
+
+    if (gameOverState) {
+        return (
+            <GameSummaryScreen
+                gameId={gameId}
+                score={gameOverState.score}
+                currentGroup={currentGroup}
+                onReplay={() => setGameOverState(null)}
+                onExit={() => onEnd(null, true)}
+            />
+        );
+    }
+
+    return React.cloneElement(children, { onEnd: handleGameEnd });
+};
+
+export default GameWrapper;
