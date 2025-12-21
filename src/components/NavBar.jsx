@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Gamepad2, Trophy, Crown } from 'lucide-react';
+import { Home, Gamepad2, Trophy, Crown, Settings } from 'lucide-react';
 
 const NavBar = ({ view, setView }) => {
     const navItems = [
@@ -7,6 +7,7 @@ const NavBar = ({ view, setView }) => {
         { id: 'games', icon: Gamepad2, label: 'Giochi', color: 'text-indigo-600' },
         { id: 'month', icon: Trophy, label: 'Mese', color: 'text-amber-600' },
         { id: 'year', icon: Crown, label: 'Anno', color: 'text-amber-600' },
+        { id: 'settings', icon: Settings, label: 'Impostazioni', color: 'text-gray-600' },
     ];
 
     return (

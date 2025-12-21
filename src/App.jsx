@@ -6,6 +6,7 @@ import LandingPage from './pages/LandingPage';
 import LoginScreen from './pages/LoginScreen';
 import Dashboard from './pages/Dashboard';
 import GroupHub from './pages/GroupHub';
+import SettingsView from './pages/SettingsView';
 import GameSelection from './pages/GameSelection';
 import Leaderboard from './pages/Leaderboard';
 import NavBar from './components/NavBar';
@@ -168,6 +169,15 @@ function App() {
             {appView === 'month' && <Leaderboard timeFrame="month" currentGroup={currentGroup} currentUser={profile} />}
 
             {appView === 'year' && <Leaderboard timeFrame="year" currentGroup={currentGroup} currentUser={profile} />}
+
+            {appView === 'settings' && (
+                <SettingsView
+                    onLogout={async () => {
+                        await auth.removeUser();
+                        setView('landing');
+                    }}
+                />
+            )}
 
             <NavBar view={appView} setView={setAppView} />
         </div>

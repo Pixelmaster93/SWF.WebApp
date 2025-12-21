@@ -25,6 +25,10 @@ jobs:
         run: npm ci
 
       - name: Build Project
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_KEYCLOAK_URL: ${{ secrets.VITE_KEYCLOAK_URL }}
+          VITE_KEYCLOAK_CLIENT_ID: ${{ secrets.VITE_KEYCLOAK_CLIENT_ID }}
         run: npm run build
 
       - name: Deploy via SCP
