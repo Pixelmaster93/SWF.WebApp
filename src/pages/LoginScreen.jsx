@@ -19,7 +19,7 @@ const LoginScreen = ({ onLogin, initialName = '' }) => {
                     {selectedEmoji}
                 </div>
 
-                <h1 className="text-3xl font-black text-amber-900 mb-1 tracking-tight">Shit w/ Friends</h1>
+                <h1 className="text-3xl font-black text-amber-900 mb-1 tracking-tight">Shit With Friends</h1>
                 <p className="text-amber-700/60 mb-8 font-medium">Benvenuto nel Club.</p>
 
                 <div className="w-full space-y-4">
