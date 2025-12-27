@@ -41,7 +41,11 @@ function App() {
     // Fetch leaderboard for current group
     const { data: groupLeaderboard } = useQuery({
         queryKey: ['groupLeaderboard', currentGroupId],
-        queryFn: () => groupService.getGroupLeaderboard(currentGroupId),
+        queryFn: async () => {
+            const res = await groupService.getGroupLeaderboard(currentGroupId);
+            console.log("App.jsx: groupLeaderboard fetched:", res);
+            return res;
+        },
         enabled: !!currentGroupId,
     });
 

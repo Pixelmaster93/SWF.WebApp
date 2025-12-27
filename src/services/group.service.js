@@ -59,11 +59,19 @@ export const groupService = {
     // Helper to get leaderboard from group members
     getGroupLeaderboard: async (groupId, timeFrame = 'all') => {
         try {
+            console.log(`Fetching leaderboard for group ${groupId}`);
             const response = await api.get(`/Group/${groupId}`);
             const group = response.data;
-            if (!group || !group.members) return [];
+            console.log("Group data received:", group);
 
-            return group.members
+            const members = group?.members || group?.Members;
+
+            if (!members) {
+                console.warn("No members found in group:", group);
+                return [];
+            }
+
+            return members
                 .map(m => ({
                     userId: m.id || m.userId,
                     userName: m.userName || m.name,
