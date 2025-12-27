@@ -14,6 +14,7 @@ import GameWrapper from './components/Games/GameWrapper';
 import { useUser } from './hooks/useUser';
 import { getUserId } from './services/api';
 import { groupService } from './services/group.service';
+import { highScoreService } from './services/highscore.service';
 import {
     GameMinesweeper, GameSudoku, GameSnake, GameFlySwatter,
     GameClicker, GameMath, GameMemory, GameReaction, GameSimon
@@ -83,7 +84,19 @@ function App() {
         }
     };
 
-    const handleGameEnd = (score, forceExit = false) => {
+    const createScoreMutation = useMutation({
+        mutationFn: highScoreService.createHighScore,
+        onSuccess: () => {
+            console.log("Score saved successfully");
+        },
+        onError: (err) => {
+            console.error("Failed to save score", err);
+        }
+    });
+
+    // ... existing useState ...
+
+    const handleGameEnd = async (score, forceExit = false) => {
         if (forceExit) {
             setActiveGame(null);
             setAppView('games');
@@ -91,10 +104,19 @@ function App() {
         }
         if (score === null || score === undefined) return;
 
-        // TODO: Send score to API
         console.log("Game Ended", activeGame, score);
-        // Ideally we would have a mutation here to submit score
-        // For now we rely on the GameWrapper to show the score and then exit
+
+        try {
+            await createScoreMutation.mutateAsync({
+                gameId: activeGame,
+                score: score,
+                groupId: currentGroupId,
+                // userId is handled by backend via token usually, or we pass it if DTO requires
+                userId: profile?.id
+            });
+        } catch (e) {
+            // Already logged in onError
+        }
     };
 
     const currentGroup = myGroups?.find(g => g.id === currentGroupId);

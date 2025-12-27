@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RotateCcw, X } from 'lucide-react';
+import { RotateCcw, X, CornerUpLeft } from 'lucide-react';
 import { GAMES_CONFIG } from '../../pages/GameSelection';
 
 const formatTime = (seconds) => {
@@ -58,7 +58,17 @@ const GameWrapper = ({ onEnd, children, gameId, currentGroup }) => {
         );
     }
 
-    return React.cloneElement(children, { onEnd: handleGameEnd });
+    return (
+        <div className="flex-1 relative flex flex-col">
+            <button
+                onClick={() => onEnd(null, true)}
+                className="absolute top-2 right-2 z-40 bg-gray-900/10 hover:bg-gray-900/20 p-2 rounded-full text-gray-700 transition-colors"
+            >
+                <CornerUpLeft size={24} />
+            </button>
+            {React.cloneElement(children, { onEnd: handleGameEnd })}
+        </div>
+    );
 };
 
 export default GameWrapper;
