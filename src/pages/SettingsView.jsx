@@ -115,7 +115,7 @@ const SettingsView = ({ onLogout, currentUser }) => {
                                             <div className="text-lg">{currentUser?.emoji || '💩'}</div>
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-bold text-gray-700">Sganciata!</span>
-                                                <span className="text-xs text-gray-400">{new Date(poop.date).toLocaleString()}</span>
+                                                <span className="text-xs text-gray-400">{new Date(poop.dateTime).toLocaleString()}</span>
                                             </div>
                                         </div>
                                     </div>
