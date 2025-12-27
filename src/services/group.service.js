@@ -80,7 +80,9 @@ export const groupService = {
                 const memberStatsPromises = members.map(async (m) => {
                     const userId = m.id || m.userId;
                     try {
+                        console.log(`[Leaderboard] Fetching poops for user ${m.userName} (${userId}) from ${startOfMonth} to ${endOfToday}`);
                         const poops = await poopService.filterPoops(userId, startOfMonth, endOfToday);
+                        console.log(`[Leaderboard] User ${m.userName} poops found:`, poops?.length);
 
                         // Calculate score: Count of poops
                         const score = poops ? poops.length : 0;
