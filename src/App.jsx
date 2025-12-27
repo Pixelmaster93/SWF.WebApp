@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from "react-oidc-context";
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingScreen from './components/LoadingScreen';
 import LandingPage from './pages/LandingPage';
 import LoginScreen from './pages/LoginScreen';
@@ -25,6 +25,7 @@ import GameLeaderboard from './pages/GameLeaderboard';
 
 function App() {
     const auth = useAuth();
+    const queryClient = useQueryClient();
     const { profile, isLoading: isProfileLoading, createProfile } = useUser(auth.isAuthenticated);
     const [view, setView] = useState('loading'); // loading, landing, createProfile, app, grouphub
     const [appView, setAppView] = useState('home'); // home, games, month, year
@@ -62,6 +63,9 @@ function App() {
                     isSortAscending: gameConfig.sort === 'asc'
                 });
                 console.log("Created new game:", newGame);
+
+                // Invalidate games query to fetch the new ID for future use
+                queryClient.invalidateQueries({ queryKey: ['games'] });
 
                 // Now try to submit score again with new ID
                 await createScoreMutation.mutateAsync({

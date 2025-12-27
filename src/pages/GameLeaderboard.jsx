@@ -12,6 +12,7 @@ const GameLeaderboard = ({ gameId, gameName, gameIcon, onClose }) => {
     const { data: scores, isLoading } = useQuery({
         queryKey: ['gameHighScores', gameId],
         queryFn: () => highScoreService.getHighScoresByGame(gameId),
+        enabled: !!gameId,
     });
 
     return (
