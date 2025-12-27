@@ -54,5 +54,26 @@ export const groupService = {
     joinGroup: async (groupId, password) => {
         const response = await api.post(`/Group/Join`, { groupId, password });
         return response.data;
+    },
+
+    // Helper to get leaderboard from group members
+    getGroupLeaderboard: async (groupId, timeFrame = 'all') => {
+        try {
+            const response = await api.get(`/Group/${groupId}`);
+            const group = response.data;
+            if (!group || !group.members) return [];
+
+            return group.members
+                .map(m => ({
+                    userId: m.id || m.userId,
+                    userName: m.userName || m.name,
+                    emoji: m.emoji,
+                    score: m.poopScore || 0
+                }))
+                .sort((a, b) => b.score - a.score);
+        } catch (error) {
+            console.error("Failed to fetch group leaderboard", error);
+            return [];
+        }
     }
 };

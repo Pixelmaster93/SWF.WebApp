@@ -41,12 +41,7 @@ function App() {
     // Fetch leaderboard for current group
     const { data: groupLeaderboard } = useQuery({
         queryKey: ['groupLeaderboard', currentGroupId],
-        // Usage of highscore service might be better here but following previous pattern/user request
-        queryFn: () => groupService.getGroupById(currentGroupId).then(g => []), // Placeholder as groupService.getGroupLeaderboard was removed due to API lack. 
-        // We can try to use highScoreService later or just return empty for avoid crash.
-        // Actually, previous code called groupService.getGroupLeaderboard(currentGroupId). 
-        // I removed that method. I should use highScoreService or return empty array.
-        // Let's rely on dashboard to handle empty.
+        queryFn: () => groupService.getGroupLeaderboard(currentGroupId),
         enabled: !!currentGroupId,
     });
 
