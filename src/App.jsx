@@ -15,6 +15,8 @@ import { useUser } from './hooks/useUser';
 import { getUserId } from './services/api';
 import { groupService } from './services/group.service';
 import { highScoreService } from './services/highscore.service';
+import { gameService } from './services/game.service';
+import { GAMES_CONFIG } from './pages/GameSelection';
 import {
     GameMinesweeper, GameSudoku, GameSnake, GameFlySwatter,
     GameClicker, GameMath, GameMemory, GameReaction, GameSimon
@@ -37,6 +39,16 @@ function App() {
             return res;
         },
         enabled: !!profile,
+    });
+
+    // Fetch available games to get their IDs
+    const { data: availableGames } = useQuery({
+        queryKey: ['games'],
+        queryFn: async () => {
+            const res = await gameService.getGames(1, 100);
+            return res;
+        },
+        enabled: !!profile
     });
 
     // Fetch leaderboard for current group
@@ -106,9 +118,18 @@ function App() {
 
         console.log("Game Ended", activeGame, score);
 
+        // Find the backend Game ID
+        const gameConfig = GAMES_CONFIG[activeGame];
+        const backendGame = availableGames?.find(g => g.name === gameConfig.name);
+
+        if (!backendGame) {
+            console.error("Could not find backend game entity for", gameConfig.name);
+            return;
+        }
+
         try {
             await createScoreMutation.mutateAsync({
-                gameId: activeGame,
+                gameId: backendGame.id, // Use GUID from backend
                 score: score,
                 groupId: currentGroupId,
                 // userId is handled by backend via token usually, or we pass it if DTO requires
