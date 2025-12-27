@@ -81,8 +81,15 @@ const GameLeaderboard = ({ gameId, gameName, gameIcon, onClose }) => {
                     )}
                 </div>
             </div>
-        </div>
-    );
+            );
+
+            if (isEmbedded) return content;
+
+            return (
+            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                {content}
+            </div>
+            );
 };
 
-export default GameLeaderboard;
+            export default GameLeaderboard;

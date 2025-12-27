@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { RotateCcw, X, CornerUpLeft } from 'lucide-react';
 import { GAMES_CONFIG } from '../../pages/GameSelection';
+import GameLeaderboard from '../../pages/GameLeaderboard';
 
 const formatTime = (seconds) => {
     if (!seconds && seconds !== 0) return '--:--';
@@ -14,10 +15,8 @@ const formatScore = (gameId, value) => {
     return value;
 };
 
-const GameSummaryScreen = ({ gameId, score, onReplay, onExit, currentGroup }) => {
+const GameSummaryScreen = ({ gameId, backendGameId, score, onReplay, onExit, currentGroup }) => {
     const config = GAMES_CONFIG[gameId];
-    // Fetch game leaderboard for current group? 
-    // For now, static or minimal.
 
     return (
         <div className="absolute inset-0 bg-white z-50 flex flex-col overflow-hidden">
@@ -30,15 +29,20 @@ const GameSummaryScreen = ({ gameId, score, onReplay, onExit, currentGroup }) =>
                 <button onClick={onReplay} className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-transform"><RotateCcw size={20} /> Rigioca</button>
                 <button onClick={onExit} className="flex items-center gap-2 bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-bold active:scale-95 transition-transform"><X size={20} /> Esci</button>
             </div>
-            <div className="flex-1 overflow-y-auto bg-gray-50 p-4">
-                {/* Leaderboard placeholder */}
-                <div className="text-center text-gray-400 mt-10">Classifica non disponibile (WIP)</div>
+            <div className="flex-1 overflow-y-auto bg-gray-50 flex flex-col">
+                {backendGameId && (
+                    <GameLeaderboard
+                        gameId={backendGameId}
+                        gameName={config.name}
+                        isEmbedded={true}
+                    />
+                )}
             </div>
         </div>
     );
 };
 
-const GameWrapper = ({ onEnd, children, gameId, currentGroup }) => {
+const GameWrapper = ({ onEnd, children, gameId, backendGameId, currentGroup }) => {
     const [gameOverState, setGameOverState] = useState(null);
 
     const handleGameEnd = (score) => {
@@ -50,6 +54,7 @@ const GameWrapper = ({ onEnd, children, gameId, currentGroup }) => {
         return (
             <GameSummaryScreen
                 gameId={gameId}
+                backendGameId={backendGameId}
                 score={gameOverState.score}
                 currentGroup={currentGroup}
                 onReplay={() => setGameOverState(null)}

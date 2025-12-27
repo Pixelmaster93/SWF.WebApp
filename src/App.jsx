@@ -206,10 +206,13 @@ function App() {
             default: GameComponent = <div>Gioco non trovato</div>;
         }
 
+        const backendGame = availableGames?.find(g => g.name === GAMES_CONFIG[activeGame].name);
+
         return (
             <div className="h-screen w-full max-w-md mx-auto bg-gray-50 flex flex-col relative overflow-hidden shadow-2xl">
                 <GameWrapper
                     gameId={activeGame}
+                    backendGameId={backendGame?.id}
                     onEnd={handleGameEnd}
                     currentGroup={currentGroup}
                 >
