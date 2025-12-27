@@ -1,8 +1,8 @@
 import api from './api';
 
 export const gameService = {
-    // GET /Game?pageNumber=1&pageSize=10
-    getGames: async (pageNumber = 1, pageSize = 10) => {
+    // GET /Game?pageNumber=0&pageSize=10
+    getGames: async (pageNumber = 0, pageSize = 10) => {
         const response = await api.get(`/Game?pageNumber=${pageNumber}&pageSize=${pageSize}`);
         return response.data;
     },

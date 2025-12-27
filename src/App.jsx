@@ -95,7 +95,7 @@ function App() {
         queryKey: ['myGroups', getUserId()],
         queryFn: async () => {
             const currentUserId = getUserId();
-            const res = await groupService.getGroups(1, 50, currentUserId);
+            const res = await groupService.getGroups(0, 50, currentUserId);
             return res;
         },
         enabled: !!profile,
@@ -105,7 +105,7 @@ function App() {
     const { data: availableGames } = useQuery({
         queryKey: ['games'],
         queryFn: async () => {
-            const res = await gameService.getGames(1, 100);
+            const res = await gameService.getGames(0, 100);
             return res;
         },
         enabled: !!profile

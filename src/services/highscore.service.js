@@ -1,14 +1,14 @@
 import api from './api';
 
 export const highScoreService = {
-    // GET /HighScore/game/{gameId}?pageNumber=1&pageSize=10
-    getHighScoresByGame: async (gameId, pageNumber = 1, pageSize = 10) => {
+    // GET /HighScore/game/{gameId}?pageNumber=0&pageSize=10
+    getHighScoresByGame: async (gameId, pageNumber = 0, pageSize = 10) => {
         const response = await api.get(`/HighScore/game/${gameId}?pageNumber=${pageNumber}&pageSize=${pageSize}`);
         return response.data;
     },
 
     // GET /HighScore/game/{gameId}/user/{userId}
-    getHighScoresByUser: async (gameId, userId, pageNumber = 1, pageSize = 10) => {
+    getHighScoresByUser: async (gameId, userId, pageNumber = 0, pageSize = 10) => {
         const response = await api.get(`/HighScore/game/${gameId}/user/${userId}?pageNumber=${pageNumber}&pageSize=${pageSize}`);
         return response.data;
     },
