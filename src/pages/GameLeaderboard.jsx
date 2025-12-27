@@ -25,8 +25,8 @@ const GameLeaderboard = ({ gameId, gameName, gameIcon, onClose, isEmbedded = fal
 
         rawScores.forEach(score => {
             // Try to find a unique identifier for the user
-            // score.userId is best, fallback to userName if needed
-            const userId = score.userId || score.userName || 'unknown';
+            // API returns 'user' as the username string (email)
+            const userId = score.user || score.userName || 'unknown';
 
             if (!userBestScores.has(userId)) {
                 userBestScores.set(userId, score);
@@ -92,7 +92,7 @@ const GameLeaderboard = ({ gameId, gameName, gameIcon, onClose, isEmbedded = fal
                                     </div>
                                     <div className="flex-1">
                                         <div className="font-bold text-gray-800 flex items-center gap-2">
-                                            <span>{score.user?.userName || score.userName || 'Anonimo'}</span>
+                                            <span>{score.user || score.userName || 'Anonimo'}</span>
                                             {index < 3 && <Medal size={14} className={
                                                 index === 0 ? 'text-yellow-500' :
                                                     index === 1 ? 'text-gray-400' :
