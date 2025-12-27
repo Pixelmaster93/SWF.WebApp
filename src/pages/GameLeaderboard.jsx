@@ -6,16 +6,43 @@ import LoadingScreen from '../components/LoadingScreen';
 
 const GameLeaderboard = ({ gameId, gameName, gameIcon, onClose, isEmbedded = false }) => {
 
-    const { data: scores, isLoading } = useQuery({
+    // Fetch more items to allow client-side filtering of duplicates
+    const { data: rawScores, isLoading } = useQuery({
         queryKey: ['gameHighScores', gameId],
         queryFn: async () => {
-            console.log(`Fetching high scores for gameId: ${gameId}`);
-            const res = await highScoreService.getHighScoresByGame(gameId);
-            console.log("High scores response:", res);
+            // Fetch top 100 to get a good sample for deduplication
+            const res = await highScoreService.getHighScoresByGame(gameId, 0, 100);
             return res;
         },
         enabled: !!gameId,
     });
+
+    // Deduplicate scores: keep only highest score per user
+    const scores = React.useMemo(() => {
+        if (!rawScores) return [];
+
+        const userBestScores = new Map();
+
+        rawScores.forEach(score => {
+            // Try to find a unique identifier for the user
+            // score.userId is best, fallback to userName if needed
+            const userId = score.userId || score.userName || 'unknown';
+
+            if (!userBestScores.has(userId)) {
+                userBestScores.set(userId, score);
+            } else {
+                // If user already has a score, keep the higher one
+                if (score.score > userBestScores.get(userId).score) {
+                    userBestScores.set(userId, score);
+                }
+            }
+        });
+
+        // Convert back to array and sort by score desc
+        return Array.from(userBestScores.values())
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 50); // Limit display to top 50
+    }, [rawScores]);
 
     const content = (
         <div className={`bg-white w-full ${isEmbedded ? 'h-full flex flex-col' : 'max-w-sm rounded-2xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in fade-in zoom-in duration-200'}`}>
@@ -65,7 +92,7 @@ const GameLeaderboard = ({ gameId, gameName, gameIcon, onClose, isEmbedded = fal
                                     </div>
                                     <div className="flex-1">
                                         <div className="font-bold text-gray-800 flex items-center gap-2">
-                                            <span>{score.userName || 'Anonimo'}</span>
+                                            <span>{score.user?.userName || score.userName || 'Anonimo'}</span>
                                             {index < 3 && <Medal size={14} className={
                                                 index === 0 ? 'text-yellow-500' :
                                                     index === 1 ? 'text-gray-400' :
