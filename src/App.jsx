@@ -21,6 +21,7 @@ import {
     GameMinesweeper, GameSudoku, GameSnake, GameFlySwatter,
     GameClicker, GameMath, GameMemory, GameReaction, GameSimon
 } from './components/Games/MiniGames';
+import GameLeaderboard from './pages/GameLeaderboard';
 
 function App() {
     const auth = useAuth();
@@ -50,7 +51,28 @@ function App() {
         const backendGame = availableGames?.find(g => g.name.toLowerCase() === gameConfig.name.toLowerCase());
 
         if (!backendGame) {
-            console.error("Could not find backend game entity for", gameConfig.name, "Available:", availableGames?.map(g => g.name));
+            console.log(`Game ${gameConfig.name} not found on backend. Creating it...`);
+            try {
+                // Determine unit and sort based on config
+                // Backend CreateGameDto: { name, description, unit, isSortAscending, icon? }
+                const newGame = await gameService.createGame({
+                    name: gameConfig.name,
+                    description: `${gameConfig.name} mini game`,
+                    unit: gameConfig.unit,
+                    isSortAscending: gameConfig.sort === 'asc'
+                });
+                console.log("Created new game:", newGame);
+
+                // Now try to submit score again with new ID
+                await createScoreMutation.mutateAsync({
+                    gameId: newGame.id,
+                    score: score,
+                    groupId: currentGroupId,
+                    userId: profile?.id
+                });
+            } catch (err) {
+                console.error("Failed to create missing game or submit score:", err);
+            }
             return;
         }
 
@@ -216,9 +238,7 @@ function App() {
 
             {appView === 'year' && <Leaderboard timeFrame="year" currentGroup={currentGroup} currentUser={profile} />}
 
-            import GameLeaderboard from './pages/GameLeaderboard';
 
-            // ... (inside App function) ...
 
             {appView === 'settings' && (
                 <SettingsView

@@ -84,7 +84,7 @@ const Dashboard = ({ currentUser, currentGroup, groups, onChangeGroup, groupLead
                     className={`w-48 h-48 rounded-full border-8 border-amber-200 bg-gradient-to-b from-amber-400 to-amber-600 shadow-2xl flex flex-col items-center justify-center transform transition-all active:scale-90 ${anim ? 'animate-pulse' : ''}`}
                 >
                     <span className="text-6xl mb-2">{currentUser.emoji}</span>
-                    <span className="text-white font-bold text-lg uppercase">PUSH</span>
+                    <span className="text-white font-bold text-lg uppercase">SGANCIA</span>
                 </button>
                 <p className="mt-4 text-gray-400 text-sm italic text-center">I tuoi punti valgono<br />in tutti i gruppi!</p>
             </div>
