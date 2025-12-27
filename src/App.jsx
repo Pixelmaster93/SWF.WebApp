@@ -115,7 +115,8 @@ function App() {
     const { data: groupLeaderboard } = useQuery({
         queryKey: ['groupLeaderboard', currentGroupId],
         queryFn: async () => {
-            const res = await groupService.getGroupLeaderboard(currentGroupId);
+            // "Classifica Recente" implies monthly or short-term activity
+            const res = await groupService.getGroupLeaderboard(currentGroupId, 'month');
             console.log("App.jsx: groupLeaderboard fetched:", res);
             return res;
         },
