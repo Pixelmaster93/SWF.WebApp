@@ -11,7 +11,12 @@ const GameLeaderboard = ({ gameId, gameName, gameIcon, onClose }) => {
 
     const { data: scores, isLoading } = useQuery({
         queryKey: ['gameHighScores', gameId],
-        queryFn: () => highScoreService.getHighScoresByGame(gameId),
+        queryFn: async () => {
+            console.log(`Fetching high scores for gameId: ${gameId}`);
+            const res = await highScoreService.getHighScoresByGame(gameId);
+            console.log("High scores response:", res);
+            return res;
+        },
         enabled: !!gameId,
     });
 

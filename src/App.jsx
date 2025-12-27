@@ -257,7 +257,7 @@ function App() {
 
             {activeLeaderboardGame && (
                 <GameLeaderboard
-                    gameId={availableGames?.find(g => g.name === GAMES_CONFIG[activeLeaderboardGame].name)?.id}
+                    gameId={availableGames?.find(g => g.name.toLowerCase() === GAMES_CONFIG[activeLeaderboardGame].name.toLowerCase())?.id}
                     gameName={GAMES_CONFIG[activeLeaderboardGame].name}
                     gameIcon={GAMES_CONFIG[activeLeaderboardGame].icon}
                     onClose={() => setActiveLeaderboardGame(null)}
