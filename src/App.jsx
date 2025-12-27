@@ -29,8 +29,42 @@ function App() {
     const [appView, setAppView] = useState('home'); // home, games, month, year
     const [currentGroupId, setCurrentGroupId] = useState(null);
     const [activeGame, setActiveGame] = useState(null);
+    const [activeLeaderboardGame, setActiveLeaderboardGame] = useState(null);
 
-    // Fetch my groups - Using userId to filter
+    // ... (queries) ...
+
+    const handleGameEnd = async (score, forceExit = false) => {
+        if (forceExit) {
+            setActiveGame(null);
+            setAppView('games');
+            return;
+        }
+        if (score === null || score === undefined) return;
+
+        console.log("Game Ended", activeGame, score);
+        console.log("Available Games:", availableGames);
+
+        // Find the backend Game ID
+        const gameConfig = GAMES_CONFIG[activeGame];
+        // Weak matching: ignore case and maybe trimmed
+        const backendGame = availableGames?.find(g => g.name.toLowerCase() === gameConfig.name.toLowerCase());
+
+        if (!backendGame) {
+            console.error("Could not find backend game entity for", gameConfig.name, "Available:", availableGames?.map(g => g.name));
+            return;
+        }
+
+        try {
+            await createScoreMutation.mutateAsync({
+                gameId: backendGame.id, // Use GUID from backend
+                score: score,
+                groupId: currentGroupId,
+                userId: profile?.id
+            });
+        } catch (e) {
+            // Already logged in onError
+        }
+    };
     const { data: myGroups, isLoading: isGroupsLoading } = useQuery({
         queryKey: ['myGroups', getUserId()],
         queryFn: async () => {
@@ -108,37 +142,7 @@ function App() {
 
     // ... existing useState ...
 
-    const handleGameEnd = async (score, forceExit = false) => {
-        if (forceExit) {
-            setActiveGame(null);
-            setAppView('games');
-            return;
-        }
-        if (score === null || score === undefined) return;
 
-        console.log("Game Ended", activeGame, score);
-
-        // Find the backend Game ID
-        const gameConfig = GAMES_CONFIG[activeGame];
-        const backendGame = availableGames?.find(g => g.name === gameConfig.name);
-
-        if (!backendGame) {
-            console.error("Could not find backend game entity for", gameConfig.name);
-            return;
-        }
-
-        try {
-            await createScoreMutation.mutateAsync({
-                gameId: backendGame.id, // Use GUID from backend
-                score: score,
-                groupId: currentGroupId,
-                // userId is handled by backend via token usually, or we pass it if DTO requires
-                userId: profile?.id
-            });
-        } catch (e) {
-            // Already logged in onError
-        }
-    };
 
     const currentGroup = myGroups?.find(g => g.id === currentGroupId);
 
@@ -201,17 +205,35 @@ function App() {
                 />
             )}
 
-            {appView === 'games' && <GameSelection onSelectGame={(id) => setActiveGame(id)} />}
+            {appView === 'games' && (
+                <GameSelection
+                    onSelectGame={(id) => setActiveGame(id)}
+                    onShowLeaderboard={(id) => setActiveLeaderboardGame(id)}
+                />
+            )}
 
             {appView === 'month' && <Leaderboard timeFrame="month" currentGroup={currentGroup} currentUser={profile} />}
 
             {appView === 'year' && <Leaderboard timeFrame="year" currentGroup={currentGroup} currentUser={profile} />}
+
+            import GameLeaderboard from './pages/GameLeaderboard';
+
+            // ... (inside App function) ...
 
             {appView === 'settings' && (
                 <SettingsView
                     onLogout={async () => {
                         await auth.signoutRedirect();
                     }}
+                />
+            )}
+
+            {activeLeaderboardGame && (
+                <GameLeaderboard
+                    gameId={availableGames?.find(g => g.name === GAMES_CONFIG[activeLeaderboardGame].name)?.id}
+                    gameName={GAMES_CONFIG[activeLeaderboardGame].name}
+                    gameIcon={GAMES_CONFIG[activeLeaderboardGame].icon}
+                    onClose={() => setActiveLeaderboardGame(null)}
                 />
             )}
 
