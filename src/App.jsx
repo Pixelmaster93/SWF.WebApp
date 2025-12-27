@@ -250,6 +250,7 @@ function App() {
 
             {appView === 'settings' && (
                 <SettingsView
+                    currentUser={profile}
                     onLogout={async () => {
                         await auth.signoutRedirect();
                     }}
