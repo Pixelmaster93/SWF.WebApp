@@ -15,6 +15,7 @@ import { useUser } from './hooks/useUser';
 import { getUserId } from './services/api';
 import { groupService } from './services/group.service';
 import { highScoreService } from './services/highscore.service';
+import { gamificationService } from './services/gamification.service';
 import { gameService } from './services/game.service';
 import { GAMES_CONFIG } from './pages/GameSelection';
 import {
@@ -149,9 +150,17 @@ function App() {
         }
     }, [auth.isLoading, auth.isAuthenticated, isProfileLoading, profile, myGroups]);
 
-    const handleCreateProfile = async (name, emoji) => {
+    const handleCreateProfile = async (name, avatarCode) => {
         try {
-            await createProfile({ name, emoji }); // API expects CreateUserRequestDto {name, emoji}
+            // 1. Create Profile with default Emoji (backend requirement)
+            await createProfile({ name, emoji: '💩' });
+
+            // 2. If avatarCode is selected, update it immediately
+            if (avatarCode) {
+                await gamificationService.updateAvatar(avatarCode);
+                // Invalidate profile again to ensure avatar is loaded
+                queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+            }
         } catch (error) {
             console.error("Failed to create profile", error);
             alert("Errore durante la creazione del profilo.");
