@@ -22,6 +22,7 @@ import {
     GameClicker, GameMath, GameMemory, GameReaction, GameSimon
 } from './components/Games/MiniGames';
 import GameLeaderboard from './pages/GameLeaderboard';
+import AchievementsView from './pages/AchievementsView';
 
 function App() {
     const auth = useAuth();
@@ -247,6 +248,8 @@ function App() {
             {appView === 'year' && <Leaderboard timeFrame="year" currentGroup={currentGroup} currentUser={profile} />}
 
 
+
+            {appView === 'achievements' && <AchievementsView />}
 
             {appView === 'settings' && (
                 <SettingsView

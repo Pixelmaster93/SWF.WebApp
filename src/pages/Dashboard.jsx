@@ -10,17 +10,33 @@ const Dashboard = ({ currentUser, currentGroup, groups, onChangeGroup, groupLead
 
     const poopMutation = useMutation({
         mutationFn: poopService.createPoop,
-        onSuccess: () => {
+        onSuccess: (data) => {
             // Invalidate relevant queries to update score
             queryClient.invalidateQueries({ queryKey: ['userProfile'] });
             queryClient.invalidateQueries({ queryKey: ['groupLeaderboard'] });
+
+            // Notification for Achievements
+            if (data?.newAchievements && data.newAchievements.length > 0) {
+                data.newAchievements.forEach(ach => {
+                    // Simple alert/banner for now as requested. 
+                    // Ideally we'd use a toast library like react-hot-toast.
+                    // For now, let's use a custom overlay or just console if no UI lib.
+                    // User asked: "Triggera un Toast / Banner / Modale"
+                    // I'll dispatch a custom event or set local state to show a modal?
+                    // Simplest valid "Banner":
+                    const msg = `🏆 ACHIEVEMENT SBLOCCATO: ${ach.name}!`;
+                    // Using standard alert is too blocking. 
+                    // Let's create a temporary banner state here or hook.
+                    alert(msg); // Temporary fallback until Toast component is added or confirmed.
+                });
+            }
         }
     });
 
     const handlePoop = () => {
         if (navigator.vibrate) navigator.vibrate(200);
         setAnim(true);
-        poopMutation.mutate({}); // Send empty body if DTO allows, or add defaults
+        poopMutation.mutate({});
         setTimeout(() => setAnim(false), 2000);
     };
 
