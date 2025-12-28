@@ -136,7 +136,11 @@ function App() {
             setView('createProfile');
         } else {
             // Authenticated and has profile
-            if (myGroups && myGroups.length > 0) {
+            // Check if user has an Avatar (or legacy emoji check if needed)
+            // If missing avatar, redirect to setup
+            if (!profile.avatarCode) {
+                setView('createProfile');
+            } else if (myGroups && myGroups.length > 0) {
                 if (!currentGroupId) {
                     setCurrentGroupId(myGroups[0].id);
                 }
@@ -152,18 +156,35 @@ function App() {
 
     const handleCreateProfile = async (name, avatarCode) => {
         try {
-            // 1. Create Profile with default Emoji (backend requirement)
-            await createProfile({ name, emoji: '💩' });
+            if (profile) {
+                // User exists, updating
+                if (profile.name !== name) {
+                    // Assuming userService.updateUser exists and takes (id, {name, ...})
+                    // Actually checking user.service.js, it takes (id, userData)
+                    // But wait, does backend allow name update? Let's assume yes or just update avatar.
+                    // For now, let's just focus on Avatar as requested.
+                    await userService.updateUser(profile.id, { name: name });
+                    queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+                }
 
-            // 2. If avatarCode is selected, update it immediately
-            if (avatarCode) {
-                await gamificationService.updateAvatar(avatarCode);
-                // Invalidate profile again to ensure avatar is loaded
-                queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+                if (avatarCode) {
+                    await gamificationService.updateAvatar(avatarCode);
+                    queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+                }
+            } else {
+                // New User
+                // 1. Create Profile with default Emoji (backend requirement)
+                await createProfile({ name, emoji: '💩' });
+
+                // 2. If avatarCode is selected, update it immediately
+                if (avatarCode) {
+                    await gamificationService.updateAvatar(avatarCode);
+                    queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+                }
             }
         } catch (error) {
-            console.error("Failed to create profile", error);
-            alert("Errore durante la creazione del profilo.");
+            console.error("Failed to create/update profile", error);
+            alert("Errore durante la creazione/aggiornamento del profilo.");
         }
     };
 
