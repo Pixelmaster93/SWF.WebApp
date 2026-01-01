@@ -8,8 +8,13 @@ export const gamificationService = {
     // I'll assume /User/achievements or similar. Let's try /User/achievements based on typical REST.
     // Spec said: "GET /achievements (che deve tornare lista completa + stato sblocco per l'utente)" 
     // So likely the backend handles the context.
+    /**
+     * GET /api/Achievement
+     * Returns a list of all achievements.
+     * @returns {Promise<import('../types').Achievement[]>}
+     */
     getAchievements: async () => {
-        const response = await api.get('/achievements');
+        const response = await api.get('/api/Achievement');
         return response.data;
     },
 
