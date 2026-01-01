@@ -19,9 +19,9 @@ const Dashboard = ({ currentUser, currentGroup, groups, onChangeGroup, groupLead
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
             const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
 
-            // 1. Poop Score (Count of poops this month)
+            // 1. Poop Score (Count of poops this month * 100)
             const poops = await poopService.getPoops(0, 1000, startOfMonth, endOfMonth); // Assuming < 1000 poops/month
-            const poopScore = poops.length || 0;
+            const poopScore = (poops.length || 0) * 100;
 
             // 2. Game Scores (Sum of max scores for each game this month)
             // Fetch all games first
