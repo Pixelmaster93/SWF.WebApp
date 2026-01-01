@@ -1,4 +1,4 @@
-import api from './api';
+import api, { getUserId } from './api';
 
 export const gamificationService = {
     // GET /User/achievements
@@ -18,9 +18,10 @@ export const gamificationService = {
         return response.data;
     },
 
-    // PUT /User/avatar
+    // PUT /User/{id} - using partial update for avatar
     updateAvatar: async (avatarCode) => {
-        const response = await api.put('/User/avatar', { avatarCode });
+        const userId = getUserId();
+        const response = await api.put(`/User/${userId}`, { avatarCode });
         return response.data;
     }
 };
