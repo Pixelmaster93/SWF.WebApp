@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, Home, Crown, Trophy } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { poopService } from '../services/poop.service';
 
 const Dashboard = ({ currentUser, currentGroup, groups, onChangeGroup, groupLeaderboard }) => {
@@ -125,6 +125,49 @@ const Dashboard = ({ currentUser, currentGroup, groups, onChangeGroup, groupLead
                     {(!groupLeaderboard || groupLeaderboard.length === 0) && <div className="text-center text-gray-400 text-sm py-4">Silenzio in questo gruppo...</div>}
                 </div>
             </div>
+
+            {/* Home Board / Timeline */}
+            <div className="px-4 mt-8">
+                <h3 className="text-gray-500 font-bold text-xs mb-3 uppercase tracking-wide">Timeline (Anno Corrente)</h3>
+                <TimelineList />
+            </div>
+        </div>
+    );
+};
+
+const TimelineList = () => {
+    // Calculate current year dates
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0]; // YYYY-MM-DD
+    const endOfYear = new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0];
+
+    const { data: timeline, isLoading } = useQuery({
+        queryKey: ['timeline', startOfYear, endOfYear],
+        queryFn: () => poopService.getPoops(0, 10, startOfYear, endOfYear)
+    });
+
+    if (isLoading) return <div className="text-center text-xs text-gray-400 py-4">Caricamento timeline...</div>;
+
+    if (!timeline || timeline.length === 0) {
+        return <div className="text-center text-xs text-gray-400 py-4">Nessuna attività quest'anno.</div>;
+    }
+
+    return (
+        <div className="space-y-3">
+            {timeline.map((item, idx) => (
+                <div key={idx || item.id} className="p-3 bg-white rounded-xl shadow-sm flex items-center gap-3 border-l-4 border-amber-200">
+                    <div className="text-2xl">💩</div>
+                    <div className="flex-1">
+                        <div className="flex justify-between items-center">
+                            <span className="font-bold text-sm text-gray-800">{item.userName || item.user || 'Utente'}</span>
+                            <span className="text-[10px] text-gray-400">{new Date(item.dateTime || item.date).toLocaleString()}</span>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                            Ha sganciato una cacca!
+                        </div>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 };

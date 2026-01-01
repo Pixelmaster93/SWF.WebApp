@@ -6,7 +6,7 @@ const NavBar = ({ view, setView }) => {
         { id: 'home', icon: Home, label: 'Home', color: 'text-amber-600' },
         { id: 'games', icon: Gamepad2, label: 'Giochi', color: 'text-indigo-600' },
         { id: 'achievements', icon: Trophy, label: 'Trofei', color: 'text-yellow-600' },
-        { id: 'rank', icon: Crown, label: 'Classifica', color: 'text-amber-600' }, // Renamed from Month/Year to generic Rank? Or keep Month.
+
         // Let's keep Month but maybe rename label to be shorter or clearer if we have space.
         // Actually, let's Replace 'Month' and 'Year' with 'Rank' (Classifica) which inside has Tabs, 
         // OR just add Achievements. 5 items fits well.

@@ -1,9 +1,12 @@
 import api from './api';
 
 export const poopService = {
-    // GET /Poop?pageNumber=1&pageSize=10
-    getPoops: async (pageNumber = 1, pageSize = 10) => {
-        const response = await api.get(`/Poop?pageNumber=${pageNumber}&pageSize=${pageSize}`);
+    // GET /Poop?pageNumber=1&pageSize=10&dateFrom=...&dateTo=...
+    getPoops: async (pageNumber = 1, pageSize = 10, dateFrom = null, dateTo = null) => {
+        let url = `/Poop?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+        if (dateFrom) url += `&dateFrom=${dateFrom}`;
+        if (dateTo) url += `&dateTo=${dateTo}`;
+        const response = await api.get(url);
         return response.data;
     },
 
