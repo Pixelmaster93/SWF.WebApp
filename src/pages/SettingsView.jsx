@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { LogOut, User, Calendar, Search, X, Lock } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { poopService } from '../services/poop.service';
+import { userService } from '../services/user.service';
 import { gamificationService } from '../services/gamification.service';
 import { getAvatarUrl } from '../utils/avatarHelper';
 
@@ -13,7 +14,96 @@ const SettingsView = ({ onLogout, currentUser }) => {
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
     const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+    const [selectedAvatarCode, setSelectedAvatarCode] = useState(null);
 
+    const openAvatarModal = () => {
+        setSelectedAvatarCode(currentUser?.avatarCode || 'DEFAULT_1');
+        setIsAvatarModalOpen(true);
+    };
+
+    // ... (existing code)
+
+    return (
+        <div className="flex flex-col h-full bg-gray-50 p-4 overflow-y-auto">
+            {/* ... */}
+            <div className="flex flex-col items-center mb-8">
+                <div className="relative">
+                    <img
+                        src={getAvatarUrl(currentUser?.avatarCode)}
+                        alt="Current Avatar"
+                        className="w-24 h-24 rounded-full border-4 border-white shadow-lg bg-gray-200 object-cover"
+                        onError={(e) => { e.target.onerror = null; e.target.src = '/avatars/POOP_1.png'; }}
+                    />
+                    <button
+                        onClick={openAvatarModal}
+                        className="absolute bottom-0 right-0 bg-amber-500 text-white p-2 rounded-full shadow-md hover:bg-amber-600 transition-colors"
+                    >
+                        <User size={16} />
+                    </button>
+                </div>
+                {/* ... */}
+            </div>
+
+            {/* ... (rest of UI) ... */}
+
+            {/* Avatar Selector Modal */}
+            {isAvatarModalOpen && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-sm max-h-[80vh] flex flex-col p-4 shadow-2xl relative">
+                        <button
+                            onClick={() => setIsAvatarModalOpen(false)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                        >
+                            <X size={24} />
+                        </button>
+                        <h2 className="text-xl font-bold mb-4">Scegli Avatar</h2>
+                        <div className="flex-1 overflow-y-auto grid grid-cols-3 gap-3 p-2">
+                            {/* Default Avatar */}
+                            <button
+                                onClick={() => setSelectedAvatarCode('DEFAULT_1')}
+                                className={`p-2 rounded-xl border-2 flex flex-col items-center gap-2 ${selectedAvatarCode === 'DEFAULT_1' ? 'border-green-500 bg-green-50 ring-2 ring-green-200' : 'border-gray-100'}`}
+                            >
+                                <img src="/avatars/POOP_1.png" className="w-12 h-12" />
+                            </button>
+
+                            {achievements?.filter(a => a.isUnlocked).map(ach => (
+                                <button
+                                    key={ach.code}
+                                    type="button"
+                                    onClick={() => setSelectedAvatarCode(ach.code)}
+                                    className={`p-2 rounded-xl border-2 flex flex-col items-center gap-2 transition-all active:scale-95 ${selectedAvatarCode === ach.code ? 'border-green-500 bg-green-50 ring-2 ring-green-200' : 'border-gray-100 hover:bg-gray-50'}`}
+                                >
+                                    <img
+                                        src={getAvatarUrl(ach.code)}
+                                        alt={ach.name}
+                                        className="w-12 h-12 object-contain"
+                                    />
+                                </button>
+                            ))}
+                            {(!achievements || achievements.every(a => !a.isUnlocked)) && (
+                                <div className="col-span-3 text-center text-gray-400 text-sm py-4">
+                                    Sblocca achievement per ottenere nuovi avatar!
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                            <button
+                                onClick={() => updateAvatarMutation.mutate(selectedAvatarCode)}
+                                disabled={updateAvatarMutation.isPending || selectedAvatarCode === currentUser.avatarCode}
+                                className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${updateAvatarMutation.isPending || selectedAvatarCode === currentUser.avatarCode
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-200'
+                                    }`}
+                            >
+                                {updateAvatarMutation.isPending ? 'Salvataggio...' : 'Conferma Avatar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
     // Fetch achievements to populate selector
     const { data: achievements } = useQuery({
         queryKey: ['achievements'],
@@ -22,11 +112,22 @@ const SettingsView = ({ onLogout, currentUser }) => {
     });
 
     const updateAvatarMutation = useMutation({
-        mutationFn: gamificationService.updateAvatar,
+        mutationFn: async (newAvatarCode) => {
+            // Include name to satisfy potential validation
+            const payload = {
+                name: currentUser.name,
+                avatarCode: newAvatarCode || 'DEFAULT_1' // Ensure we don't send null if backend dislikes it
+            };
+            return await userService.updateUser(currentUser.id, payload);
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['userProfile'] });
             setIsAvatarModalOpen(false);
             alert("Avatar aggiornato!");
+        },
+        onError: (err) => {
+            console.error("Failed to update avatar", err);
+            alert("Errore durante l'aggiornamento dell'avatar: " + (err.response?.data?.title || err.message));
         }
     });
 
@@ -197,8 +298,13 @@ const SettingsView = ({ onLogout, currentUser }) => {
                             {achievements?.filter(a => a.isUnlocked).map(ach => (
                                 <button
                                     key={ach.code}
-                                    onClick={() => updateAvatarMutation.mutate(ach.code)}
-                                    className={`p-2 rounded-xl border-2 flex flex-col items-center gap-2 transition-all active:scale-95 ${currentUser.avatarCode === ach.code ? 'border-green-500 bg-green-50' : 'border-gray-100 hover:bg-gray-50'}`}
+                                    type="button"
+                                    disabled={updateAvatarMutation.isPending}
+                                    onClick={() => {
+                                        console.log("Selecting avatar:", ach.code);
+                                        updateAvatarMutation.mutate(ach.code);
+                                    }}
+                                    className={`p-2 rounded-xl border-2 flex flex-col items-center gap-2 transition-all active:scale-95 ${currentUser.avatarCode === ach.code ? 'border-green-500 bg-green-50' : 'border-gray-100 hover:bg-gray-50'} ${updateAvatarMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
                                     <img
                                         src={getAvatarUrl(ach.code)}
