@@ -185,8 +185,10 @@ function App() {
 
     const createScoreMutation = useMutation({
         mutationFn: highScoreService.createHighScore,
-        onSuccess: () => {
+        onSuccess: (data, variables) => {
             console.log("Score saved successfully");
+            queryClient.invalidateQueries({ queryKey: ['gameHighScores', variables.gameId] });
+            queryClient.invalidateQueries({ queryKey: ['groupLeaderboard', variables.groupId] });
         },
         onError: (err) => {
             console.error("Failed to save score", err);
