@@ -2,11 +2,60 @@ import React, { useState } from 'react';
 import { ChevronDown, Home, Crown, Trophy } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { poopService } from '../services/poop.service';
+import { gameService } from '../services/game.service';
+import { highScoreService } from '../services/highscore.service';
 
 const Dashboard = ({ currentUser, currentGroup, groups, onChangeGroup, groupLeaderboard }) => {
     const [anim, setAnim] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const queryClient = useQueryClient();
+
+    // Calculate Monthly Score
+    const { data: monthlyScore } = useQuery({
+        queryKey: ['monthlyScore', currentUser?.id],
+        queryFn: async () => {
+            if (!currentUser?.id) return 0;
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+            // 1. Poop Score (Count of poops this month)
+            const poops = await poopService.getPoops(0, 1000, startOfMonth, endOfMonth); // Assuming < 1000 poops/month
+            const poopScore = poops.length || 0;
+
+            // 2. Game Scores (Sum of max scores for each game this month)
+            // Fetch all games first
+            const games = await gameService.getGames(0, 50);
+            let gameScoreTotal = 0;
+
+            if (games && games.length > 0) {
+                const scorePromises = games.map(async (g) => {
+                    try {
+                        const scores = await highScoreService.getHighScoresByUser(g.id, currentUser.id, 0, 50);
+                        // Filter for current month
+                        const monthlyScores = scores.filter(s => {
+                            const d = new Date(s.date);
+                            return d >= new Date(startOfMonth) && d <= new Date(endOfMonth + "T23:59:59");
+                        });
+
+                        if (monthlyScores.length > 0) {
+                            // Find max score
+                            return Math.max(...monthlyScores.map(s => s.score));
+                        }
+                        return 0;
+                    } catch (e) {
+                        return 0;
+                    }
+                });
+
+                const calculatedScores = await Promise.all(scorePromises);
+                gameScoreTotal = calculatedScores.reduce((a, b) => a + b, 0);
+            }
+
+            return poopScore + gameScoreTotal;
+        },
+        enabled: !!currentUser?.id
+    });
 
     const poopMutation = useMutation({
         mutationFn: poopService.createPoop,
@@ -14,6 +63,8 @@ const Dashboard = ({ currentUser, currentGroup, groups, onChangeGroup, groupLead
             // Invalidate relevant queries to update score
             queryClient.invalidateQueries({ queryKey: ['userProfile'] });
             queryClient.invalidateQueries({ queryKey: ['groupLeaderboard'] });
+            queryClient.invalidateQueries({ queryKey: ['monthlyScore'] }); // Refresh monthly score
+
 
             // Notification for Achievements
             if (data?.newAchievements && data.newAchievements.length > 0) {
@@ -63,7 +114,7 @@ const Dashboard = ({ currentUser, currentGroup, groups, onChangeGroup, groupLead
     }
 
     return (
-        <div className="flex-1 overflow-y-auto pb-20 bg-gray-50">
+        <div className="flex-1 flex flex-col h-full bg-gray-50 overflow-hidden">
             <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex justify-between items-center">
                 <div className="relative">
                     <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex items-center gap-1 font-bold text-lg text-amber-900 active:opacity-50">
@@ -89,11 +140,11 @@ const Dashboard = ({ currentUser, currentGroup, groups, onChangeGroup, groupLead
                     )}
                 </div>
                 <div className="bg-amber-100 px-3 py-1 rounded-full text-amber-800 font-mono text-sm font-bold">
-                    {currentUser.poopScore} pt
+                    {monthlyScore ?? 0} pt (Mese)
                 </div>
             </div>
 
-            <div className="flex flex-col items-center justify-center py-8">
+            <div className="flex flex-col items-center justify-center py-8 shrink-0">
                 <button
                     onClick={handlePoop}
                     disabled={poopMutation.isPending}
@@ -105,30 +156,9 @@ const Dashboard = ({ currentUser, currentGroup, groups, onChangeGroup, groupLead
                 <p className="mt-4 text-gray-400 text-sm italic text-center">I tuoi punti valgono<br />in tutti i gruppi!</p>
             </div>
 
-            <div className="px-4">
-                <h3 className="text-gray-500 font-bold text-xs mb-3 uppercase tracking-wide">Classifica Recente</h3>
-                <div className="space-y-3">
-                    {groupLeaderboard?.map((entry, idx) => (
-                        <div key={idx} className={`p-3 rounded-xl shadow-sm flex items-center gap-3 transition-all ${getLeaderStyle(entry.userId)}`}>
-                            <div className="relative">
-                                <div className="bg-gray-100 w-10 h-10 rounded-full flex items-center justify-center text-xl border border-gray-200">{entry.emoji}</div>
-                                <div className="absolute -top-2 -right-2">{getLeaderIcon(entry.userId)}</div>
-                            </div>
-                            <div className="flex-1">
-                                <p className="text-sm font-medium flex items-center gap-2">
-                                    <span className="font-bold">{entry.userName}</span>
-                                </p>
-                                <p className="text-xs opacity-80">{entry.score} PT</p>
-                            </div>
-                        </div>
-                    ))}
-                    {(!groupLeaderboard || groupLeaderboard.length === 0) && <div className="text-center text-gray-400 text-sm py-4">Silenzio in questo gruppo...</div>}
-                </div>
-            </div>
-
             {/* Home Board / Timeline */}
-            <div className="px-4 mt-8">
-                <h3 className="text-gray-500 font-bold text-xs mb-3 uppercase tracking-wide">Timeline (Anno Corrente)</h3>
+            <div className="flex-1 overflow-y-auto px-4 pb-24">
+                <h3 className="text-gray-500 font-bold text-xs mb-3 uppercase tracking-wide sticky top-0 bg-gray-50 py-2 z-10">Timeline (Anno Corrente)</h3>
                 <TimelineList />
             </div>
         </div>
