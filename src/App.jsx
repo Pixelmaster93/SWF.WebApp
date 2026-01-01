@@ -138,17 +138,12 @@ function App() {
             // Authenticated and has profile
             // Check if user has an Avatar (or legacy emoji check if needed)
             // If missing avatar, redirect to setup
-            if (!profile.avatarCode) {
-                setView('createProfile');
-            } else if (myGroups && myGroups.length > 0) {
+            if (myGroups && myGroups.length > 0) {
                 if (!currentGroupId) {
                     setCurrentGroupId(myGroups[0].id);
                 }
                 setView('app');
-            } else if (myGroups && myGroups.length === 0) {
-                setView('grouphub');
             } else {
-                // If myGroups is null/undefined but profile exists (fallback)
                 setView('grouphub');
             }
         }
