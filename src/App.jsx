@@ -137,12 +137,7 @@ function App() {
         } else {
             // Authenticated and has profile
             // Check if user has an Avatar (or legacy emoji check if needed)
-            if (!profile.avatarCode) {
-                // Auto-assign default avatar
-                gamificationService.updateAvatar('DEFAULT_1')
-                    .then(() => queryClient.invalidateQueries({ queryKey: ['userProfile'] }))
-                    .catch(err => console.error("Failed to set default avatar", err));
-            }
+
 
             if (myGroups && myGroups.length > 0) {
                 if (!currentGroupId) {

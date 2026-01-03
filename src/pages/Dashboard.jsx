@@ -158,35 +158,63 @@ const Dashboard = ({ currentUser, currentGroup, groups, onChangeGroup, groupLead
 
             {/* Home Board / Timeline */}
             <div className="flex-1 overflow-y-auto px-4 pb-24">
-                <h3 className="text-gray-500 font-bold text-xs mb-3 uppercase tracking-wide sticky top-0 bg-gray-50 py-2 z-10">Timeline (Anno Corrente)</h3>
-                <TimelineList />
+                <h3 className="text-gray-500 font-bold text-xs mb-3 uppercase tracking-wide sticky top-0 bg-gray-50 py-2 z-10">Timeline (Mese Corrente)</h3>
+                <TimelineList members={groupLeaderboard} />
             </div>
         </div>
     );
 };
 
-const TimelineList = () => {
-    // Calculate current year dates
+const TimelineList = ({ members }) => {
+    // Calculate current month dates
     const now = new Date();
-    const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0]; // YYYY-MM-DD
-    const endOfYear = new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0];
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+    // Get list of userIds to fetch. If members is undefined/null, we can't fetch group data.
+    // However, if we just landed, members might be empty loading.
 
     const { data: timeline, isLoading } = useQuery({
-        queryKey: ['timeline', startOfYear, endOfYear],
-        queryFn: () => poopService.getPoops(0, 10, startOfYear, endOfYear)
+        queryKey: ['timeline', 'group', members?.map(m => m.userId).join(','), startOfMonth, endOfMonth],
+        queryFn: async () => {
+            if (!members || members.length === 0) return [];
+
+            const promises = members.map(async (member) => {
+                try {
+                    // Fetch poops for this user
+                    const userPoops = await poopService.filterPoops(member.userId, startOfMonth, endOfMonth);
+                    // Add user info to each poop if missing (backend might return just poop data)
+                    return userPoops.map(p => ({
+                        ...p,
+                        userName: member.userName,
+                        userEmoji: member.emoji // Add emoji for display
+                    }));
+                } catch (e) {
+                    console.error(`Failed to fetch poops for ${member.userName}`, e);
+                    return [];
+                }
+            });
+
+            const results = await Promise.all(promises);
+            // Flatten
+            const allPoops = results.flat();
+            // Sort by date desc
+            return allPoops.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+        },
+        enabled: !!members && members.length > 0
     });
 
     if (isLoading) return <div className="text-center text-xs text-gray-400 py-4">Caricamento timeline...</div>;
 
     if (!timeline || timeline.length === 0) {
-        return <div className="text-center text-xs text-gray-400 py-4">Nessuna attività quest'anno.</div>;
+        return <div className="text-center text-xs text-gray-400 py-4">Nessuna attività in questo mese.</div>;
     }
 
     return (
         <div className="space-y-3">
             {timeline.map((item, idx) => (
                 <div key={idx || item.id} className="p-3 bg-white rounded-xl shadow-sm flex items-center gap-3 border-l-4 border-amber-200">
-                    <div className="text-2xl">💩</div>
+                    <div className="text-2xl">{item.userEmoji || '💩'}</div>
                     <div className="flex-1">
                         <div className="flex justify-between items-center">
                             <span className="font-bold text-sm text-gray-800">{item.userName || item.user || 'Utente'}</span>

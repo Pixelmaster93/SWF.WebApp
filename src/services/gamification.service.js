@@ -18,10 +18,9 @@ export const gamificationService = {
         return response.data;
     },
 
-    // PUT /User/{id} - using partial update for avatar
+    // PUT /User/avatar
     updateAvatar: async (avatarCode) => {
-        const userId = getUserId();
-        const response = await api.put(`/User/${userId}`, { avatarCode });
+        const response = await api.put(`/User/avatar`, { avatarCode });
         return response.data;
     }
 };
