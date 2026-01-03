@@ -188,8 +188,8 @@ const SettingsView = ({ onLogout, currentUser }) => {
                         <div className="flex-1 overflow-y-auto grid grid-cols-3 gap-3 p-2">
                             {/* Default Avatar */}
                             <button
-                                onClick={() => updateAvatarMutation.mutate(null)}
-                                className={`p-2 rounded-xl border-2 flex flex-col items-center gap-2 ${!currentUser.avatarCode ? 'border-green-500 bg-green-50' : 'border-gray-100'}`}
+                                onClick={() => updateAvatarMutation.mutate("DEFAULT_1")}
+                                className={`p-2 rounded-xl border-2 flex flex-col items-center gap-2 ${currentUser?.avatarCode === 'DEFAULT_1' ? 'border-green-500 bg-green-50' : 'border-gray-100'}`}
                             >
                                 <img src="/avatars/POOP_1.png" className="w-12 h-12" />
                             </button>

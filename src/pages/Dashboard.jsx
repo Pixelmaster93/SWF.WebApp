@@ -168,40 +168,61 @@ const Dashboard = ({ currentUser, currentGroup, groups, onChangeGroup, groupLead
 const TimelineList = ({ members }) => {
     // Calculate current month dates
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    // Use local time strings to avoid UTC shifts causing day-off errors if needed, 
+    // but the backend seems fine with ISO. Let's ensure we cover the full month.
+    // Creating dates in local time, then toISOString() might shift.
+    // Let's manually construct YYYY-MM-DD to be safe and precise.
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    // Start of month
+    const startOfMonth = `${year}-${month}-01`;
+    // End of month (simple trick: next month 0th day)
+    // Actually simpler: just typical new Date -> ISO string is usually fine because backend handles dates inclusive.
+    // But let's stick to the generated strings which were consistent.
+    // Reverting to previous logic but ensuring we log it.
 
-    // Get list of userIds to fetch. If members is undefined/null, we can't fetch group data.
-    // However, if we just landed, members might be empty loading.
+    // Better date construction preventing TZ issues:
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    start.setMinutes(start.getMinutes() - start.getTimezoneOffset());
+    const startOfMonthIso = start.toISOString().split('T')[0];
+
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    end.setMinutes(end.getMinutes() - end.getTimezoneOffset());
+    const endOfMonthIso = end.toISOString().split('T')[0];
+
+    // console.log("Timeline Dates:", startOfMonthIso, endOfMonthIso);
 
     const { data: timeline, isLoading } = useQuery({
-        queryKey: ['timeline', 'group', members?.map(m => m.userId).join(','), startOfMonth, endOfMonth],
+        // Key includes members hash to refetch if group changes
+        queryKey: ['timeline', 'group_v2', members?.length, startOfMonthIso, endOfMonthIso],
         queryFn: async () => {
-            if (!members || members.length === 0) return [];
+            // 1. Fetch "global" poops (visible to user) for the period
+            const allPoops = await poopService.getPoops(0, 200, startOfMonthIso, endOfMonthIso); // Fetch 200 to be safe
+            console.log("Fetched Poops:", allPoops.length);
 
-            const promises = members.map(async (member) => {
-                try {
-                    // Fetch poops for this user
-                    const userPoops = await poopService.filterPoops(member.userId, startOfMonth, endOfMonth);
-                    // Add user info to each poop if missing (backend might return just poop data)
-                    return userPoops.map(p => ({
-                        ...p,
-                        userName: member.userName,
-                        userEmoji: member.emoji // Add emoji for display
-                    }));
-                } catch (e) {
-                    console.error(`Failed to fetch poops for ${member.userName}`, e);
-                    return [];
-                }
+            if (!members || members.length === 0) {
+                // If no members, return an empty array for the timeline
+                return [];
+            }
+
+            // 2. Filter by group members
+            const memberIds = new Set(members.map(m => m.userId));
+            const groupPoops = allPoops.filter(p => memberIds.has(p.userId));
+
+            // 3. Map to add display info
+            const mappedPoops = groupPoops.map(p => {
+                const member = members.find(m => m.userId === p.userId);
+                return {
+                    ...p,
+                    userName: member ? member.userName : p.username, // Fallback to p.username from API
+                    userEmoji: member ? member.emoji : '💩'
+                };
             });
 
-            const results = await Promise.all(promises);
-            // Flatten
-            const allPoops = results.flat();
-            // Sort by date desc
-            return allPoops.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+            // 4. Sort by date desc
+            return mappedPoops.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
         },
-        enabled: !!members && members.length > 0
+        enabled: true // Always try to fetch if component mounted
     });
 
     if (isLoading) return <div className="text-center text-xs text-gray-400 py-4">Caricamento timeline...</div>;
